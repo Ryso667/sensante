@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '../../../../generated/prisma'
+import { PrismaClient } from '@/generated/prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 
-const prisma = new PrismaClient()
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+const prisma = new PrismaClient({ adapter })
 
-// GET /api/patients/[id] → détail d'un patient
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -27,7 +28,6 @@ export async function GET(
   }
 }
 
-// PUT /api/patients/[id] → modifier un patient
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }

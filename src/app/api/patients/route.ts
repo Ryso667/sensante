@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '../../../generated/prisma'
+import { PrismaClient } from '@/generated/prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 
-const prisma = new PrismaClient()
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+const prisma = new PrismaClient({ adapter })
 
-// GET /api/patients → liste tous les patients
 export async function GET() {
   try {
     const patients = await prisma.patient.findMany({
@@ -18,7 +19,6 @@ export async function GET() {
   }
 }
 
-// POST /api/patients → créer un nouveau patient
 export async function POST(request: Request) {
   try {
     const body = await request.json()
