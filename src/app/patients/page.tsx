@@ -1,57 +1,21 @@
-'use client'
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-
-interface Patient {
-  id: string
-  nom: string
-  prenom: string
-  sexe: string
-  telephone?: string
-  region?: string
-}
+import PatientCard from "@/components/PatientCard";
 
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<Patient[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/patients')
-      .then(r => r.json())
-      .then(data => {
-        setPatients(data)
-        setLoading(false)
-      })
-  }, [])
-
-  if (loading) return <div className="p-6">Chargement...</div>
+  const patients = [
+    { nom: "Aminata Sow", region: "Dakar", age: 34, sexe: "F" as const },
+    { nom: "Ibrahima Ba", region: "Thiès", age: 45, sexe: "M" as const },
+    { nom: "Awa Diallo", region: "Saint-Louis", age: 28, sexe: "F" as const },
+    { nom: "Cheikh Fall", region: "Ziguinchor", age: 52, sexe: "M" as const },
+  ];
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Patients</h1>
-        <Link href="/patients/nouveau"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-          + Nouveau patient
-        </Link>
+    <div>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">Patients</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {patients.map((p, i) => (
+          <PatientCard key={i} {...p} />
+        ))}
       </div>
-
-      {patients.length === 0 ? (
-        <p className="text-gray-500">Aucun patient enregistré.</p>
-      ) : (
-        <div className="grid gap-4">
-          {patients.map((p) => (
-            <Link key={p.id} href={`/patients/${p.id}`}
-              className="border rounded-lg p-4 hover:bg-gray-50 flex justify-between items-center">
-              <div>
-                <p className="font-medium">{p.prenom} {p.nom}</p>
-                <p className="text-sm text-gray-500">{p.sexe === 'M' ? 'Masculin' : 'Féminin'}</p>
-              </div>
-              <span className="text-gray-400">{p.region}</span>
-            </Link>
-          ))}
-        </div>
-      )}
     </div>
-  )
+  );
 }
