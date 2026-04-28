@@ -1,25 +1,21 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Patient {
-  id             String   @id @default(cuid())
-  nom            String
-  prenom         String
-  date_naissance DateTime
-  sexe           String
-  telephone      String?
-  adresse        String?
-  region         String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String   @id @default(cuid())
+  nom           String
+  prenom        String
+  dateNaissance DateTime
+  sexe          String
+  telephone     String?
+  adresse       String?
+  region        String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
