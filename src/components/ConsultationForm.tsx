@@ -1,9 +1,8 @@
 "use client";
-
 import { useState, useEffect } from "react";
 
 interface Patient {
-  id: number;
+  id: string;
   nom: string;
   prenom: string;
   region: string;
@@ -23,8 +22,11 @@ export default function ConsultationForm({
   onSuccess: () => void;
 }) {
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [patientId, setPatientId] = useState<string>("");
   const [symptomes, setSymptomes] = useState<string[]>([]);
+  const [notes, setNotes] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/patients")
@@ -34,61 +36,88 @@ export default function ConsultationForm({
 
   function toggleSymptome(s: string) {
     setSymptomes((prev) =>
-      prev.includes(s)
-        ? prev.filter((x) => x !== s)
-        : [...prev, s]
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
     );
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (symptomes.length === 0) {
-      alert("Cochez au moins un symptôme.");
+    setError(null);
+
+    if (!patientId) {
+      setError("Veuillez sélectionner un patient.");
       return;
     }
-    setLoading(true);
-    const formData = new FormData(e.currentTarget);
-    const res = await fetch("/api/consultations", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        patientId: Number(formData.get("patientId")),
-        symptomes: symptomes,
-        notes: formData.get("notes"),
-      }),
-    });
-    if (res.ok) {
-      setSymptomes([]);
-      e.currentTarget.reset();
-      onSuccess();
+
+    if (symptomes.length === 0) {
+      setError("Cochez au moins un symptôme.");
+      return;
     }
-    setLoading(false);
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/consultations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patientId,        // ✅ String (cuid), pas de Number()
+          symptomes,
+          notes: notes || null,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setPatientId("");
+        setSymptomes([]);
+        setNotes("");
+        onSuccess();
+      } else {
+        setError(data.error || "Erreur lors de l'enregistrement.");
+      }
+    } catch (err) {
+      setError("Erreur réseau. Veuillez réessayer.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
-      <h3 className="text-lg font-bold text-gray-800">
-        Nouvelle consultation
-      </h3>
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white rounded-lg shadow-md p-6 space-y-6"
+    >
+      <h3 className="text-lg font-bold text-gray-800">Nouvelle consultation</h3>
 
-      {/* Section 1 : Patient */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Patient */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">
           Patient
         </label>
-        <select name="patientId" required className="w-full p-3 border rounded-lg">
+        <select
+          value={patientId}
+          onChange={(e) => setPatientId(e.target.value)}
+          required
+          className="w-full p-3 border rounded-lg"
+        >
           <option value="">Sélectionner un patient</option>
           {patients.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.prenom} {p.nom} --- {p.region}
+              {p.prenom} {p.nom} — {p.region}
             </option>
           ))}
         </select>
       </div>
 
-      {/* Section 2 : Symptômes */}
+      {/* Symptômes */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">
           Symptômes ({symptomes.length} sélectionnés)
@@ -115,13 +144,14 @@ export default function ConsultationForm({
         </div>
       </div>
 
-      {/* Section 3 : Notes */}
+      {/* Notes */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">
           Notes (optionnel)
         </label>
         <textarea
-          name="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
           rows={3}
           placeholder="Observations cliniques..."
           className="w-full p-3 border rounded-lg"
