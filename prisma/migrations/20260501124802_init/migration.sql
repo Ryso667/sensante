@@ -27,9 +27,10 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Consultation" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "motif" TEXT NOT NULL,
+    "symptomes" TEXT NOT NULL,
     "notes" TEXT,
-    "diagnostic" TEXT,
+    "statut" TEXT NOT NULL DEFAULT 'en_attente',
+    "date" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     "patientId" TEXT NOT NULL,
