@@ -1,4 +1,5 @@
 import ConsultationCard from "@/components/ConsultationCard";
+import DiagnosticIA from "@/components/DiagnosticIA";
 
 export default function ConsultationsPage() {
   return (
@@ -14,6 +15,12 @@ export default function ConsultationsPage() {
           symptomes="Fièvre, toux, fatigue"
           statut="termine"
         />
+	<DiagnosticIA
+          consultationId={c.id}
+          diagnosticExistant={c.diagnosticIa}
+          confianceExistante={c.confiance}
+          onDiagnostic={charger}
+         />
 
         <ConsultationCard
           patient="Ibrahima Ba"
@@ -21,6 +28,13 @@ export default function ConsultationsPage() {
           symptomes="Maux de tête, vertiges"
           statut="en_attente"
         />
+	 <DiagnosticIA
+          consultationId={c.id}
+          diagnosticExistant={c.diagnosticIa}
+          confianceExistante={c.confiance}
+          onDiagnostic={charger}
+         />
+
       </div>
     </div>
   );
