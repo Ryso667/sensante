@@ -92,7 +92,7 @@ export default function ConsultationsPage() {
               )}
 
               <DiagnosticIA
-                consultationId={Number(c.id)}
+                consultationId={c.id}
                 diagnosticExistant={c.diagnosticIa}
                 confianceExistante={c.confiance}
                 onDiagnostic={charger}

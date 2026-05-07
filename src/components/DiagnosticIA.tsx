@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 interface DiagnosticIAProps {
-  consultationId: number;
+  consultationId: string;
   diagnosticExistant: string | null;
   confianceExistante: number | null;
   onDiagnostic: () => void;
