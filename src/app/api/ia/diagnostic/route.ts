@@ -43,7 +43,9 @@ export async function POST(request: Request) {
         sexe: consultation.patient.sexe,
         region: consultation.patient.region,
       },
-      consultation.symptomes as string[],
+      (typeof consultation.symptomes === "string"
+      ? consultation.symptomes.split(", ")
+      : consultation.symptomes as string[]),
       consultation.notes
     );
 
