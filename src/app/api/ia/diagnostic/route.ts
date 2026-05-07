@@ -5,7 +5,6 @@ import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-  // 1. Vérification de la session (Sécurité - Rôle du Bouclier)
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json(
@@ -17,7 +16,6 @@ export async function POST(request: Request) {
   try {
     const { consultationId } = await request.json();
 
-    // 2. Récupérer la consultation avec les infos du patient
     const consultation = await prisma.consultation.findUnique({
       where: { id: consultationId },
       include: { patient: true },
@@ -30,11 +28,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Calcul de l'âge du patient (logique métier)
     const naissance = new Date(consultation.patient.dateNaissance);
     const age = new Date().getFullYear() - naissance.getFullYear();
 
-    // 4. Appel au service Groq (L'Oracle)
+    const symptomesArray = typeof consultation.symptomes === "string"
+      ? consultation.symptomes.split(",").map((s) => s.trim())
+      : consultation.symptomes as string[];
+
     const resultat = await analyserSymptomes(
       {
         nom: consultation.patient.nom,
@@ -43,22 +43,20 @@ export async function POST(request: Request) {
         sexe: consultation.patient.sexe,
         region: consultation.patient.region,
       },
-      consultation.symptomes as string[],
+      symptomesArray,
       consultation.notes
     );
 
-    // 5. Mise à jour de la consultation dans la BDD
     const updated = await prisma.consultation.update({
       where: { id: consultationId },
       data: {
-        diagnosticla: resultat.diagnostic,
+        diagnosticIa: resultat.diagnostic,
         confiance: resultat.confiance,
-        statut: "termine", // On marque la consultation comme traitée
+        statut: "termine",
       },
       include: { patient: true },
     });
 
-    // 6. Retourner le résultat complet au front-end
     return NextResponse.json({
       ...resultat,
       consultation: updated,

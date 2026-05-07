@@ -4,7 +4,7 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-const SYSTEM_PROMPT = `Tu es un assistant médical pour le Sénégal. 
+const SYSTEM_PROMPT = `Tu es un assistant médical pour le Sénégal.
 Tu analyses les symptômes signalés par un agent de santé communautaire et tu proposes un pré-diagnostic.
 
 Règles :
@@ -17,8 +17,8 @@ Règles :
 Réponds UNIQUEMENT en JSON valide :
 {
   "diagnostic": "description du pré-diagnostic",
-  "confidence": nombre_entre_0_et_100,
-  "recommendation": "conseil pour l'agent",
+  "confiance": nombre_entre_0_et_100,
+  "recommandation": "conseil pour l'agent",
   "urgence": "faible" | "moyen" | "urgent"
 }`;
 
@@ -34,8 +34,8 @@ export async function analyserSymptomes(
   notes: string | null
 ): Promise<{
   diagnostic: string;
-  confidence: number;
-  recommendation: string;
+  confiance: number;
+  recommandation: string;
   urgence: string;
 }> {
   const userMessage = `Patient : ${patient.prenom} ${patient.nom}
@@ -56,16 +56,15 @@ Propose un pré-diagnostic.`;
     max_tokens: 500,
   });
 
-  const response =
-    completion.choices[0]?.message?.content || "{}";
+  const response = completion.choices[0]?.message?.content || "{}";
 
   try {
     return JSON.parse(response);
   } catch {
     return {
       diagnostic: "Analyse impossible. Réessayez.",
-      confidence: 0,
-      recommendation: "Consultez un professionnel de santé.",
+      confiance: 0,
+      recommandation: "Consultez un professionnel de santé.",
       urgence: "moyen",
     };
   }

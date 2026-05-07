@@ -1,8 +1,6 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import PatientForm from "@/components/PatientForm";
-
 interface Patient {
   id: string;
   nom: string;
@@ -11,32 +9,30 @@ interface Patient {
   sexe: string;
   region: string;
 }
-
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-
   async function chargerPatients() {
     const res = await fetch("/api/patients");
     const data = await res.json();
-    setPatients(data);
+    if (res.ok && Array.isArray(data)) {
+      setPatients(data);
+    } else {
+      setPatients([]);
+      console.error("Erreur API:", data);
+    }
     setLoading(false);
   }
-
   useEffect(() => {
     chargerPatients();
   }, []);
-
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Patients</h1>
-
       <PatientForm onSuccess={chargerPatients} />
-
       <h2 className="text-xl font-semibold text-gray-700 mt-8 mb-4">
         Liste des patients ({patients.length})
       </h2>
-
       {loading ? (
         <p className="text-gray-500">Chargement...</p>
       ) : patients.length === 0 ? (
