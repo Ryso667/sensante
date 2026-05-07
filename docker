@@ -1,0 +1,15 @@
+version: "3.8" -compose.yml
+services: -compose.yml
+ db: -compose.yml
+ image: postgres:16 -compose.yml
+ restart: always  -compose.yml
+ environment: -compose.yml
+ POSTGRES_USER: postgres  -compose.yml
+ POSTGRES_PASSWORD: postgres  -compose.yml
+ POSTGRES_DB: sensante  -compose.yml
+ ports: -compose.yml
+ - "5432:5432" -compose.yml
+ volumes: -compose.yml
+ - pgdata:/var/lib/postgresql/data -compose.yml
+volumes: -compose.yml
+ pgdata: -compose.yml
