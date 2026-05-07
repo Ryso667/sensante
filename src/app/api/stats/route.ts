@@ -18,7 +18,38 @@ export async function GET() {
     where: { statut: "termine" },
   });
   const alertesUrgentes = await prisma.consultation.count({
-    where: { statut: "termine" },
+    where: {
+      statut: "termine",
+      urgence: "urgent",
+      diagnosticIa: { not: null },
+    },
+  });
+
+  // Confiance moyenne
+  const confianceMoyenneResult = await prisma.consultation.aggregate({
+    _avg: { confiance: true },
+    where: { diagnosticIa: { not: null } },
+  });
+  const confianceMoyenne = Math.round(
+    confianceMoyenneResult._avg.confiance || 0
+  );
+
+  // Répartition par urgence
+  const parUrgence = await prisma.consultation.groupBy({
+    by: ["urgence"],
+    _count: { id: true },
+    where: { urgence: { not: null } },
+  });
+
+  // Diagnostics ce mois
+  const debutMois = new Date();
+  debutMois.setDate(1);
+  debutMois.setHours(0, 0, 0, 0);
+  const diagnosticsCeMois = await prisma.consultation.count({
+    where: {
+      diagnosticIa: { not: null },
+      createdAt: { gte: debutMois },
+    },
   });
 
   const parRegion = await prisma.patient.groupBy({
@@ -35,7 +66,10 @@ export async function GET() {
   });
 
   const parMois: Record<string, number> = {};
-  const moisNoms = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"];
+  const moisNoms = [
+    "Jan", "Fév", "Mar", "Avr", "Mai",
+    "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc",
+  ];
   consultationsRecentes.forEach((c) => {
     const d = new Date(c.date);
     const key = `${moisNoms[d.getMonth()]} ${d.getFullYear()}`;
@@ -43,7 +77,10 @@ export async function GET() {
   });
 
   const dernieresAlertes = await prisma.consultation.findMany({
-    where: { statut: "termine" },
+    where: {
+      statut: "termine",
+      diagnosticIa: { not: null },
+    },
     include: { patient: true },
     orderBy: { date: "desc" },
     take: 5,
@@ -56,17 +93,25 @@ export async function GET() {
       consultationsTerminees,
       alertesUrgentes,
     },
+    confianceMoyenne,
+    diagnosticsCeMois,
+    parUrgence: parUrgence.map((u) => ({
+      urgence: u.urgence,
+      total: u._count.id,
+    })),
     parRegion: parRegion.map((r) => ({
       region: r.region,
       total: r._count.id,
     })),
-    parMois: Object.entries(parMois).map(([mois, total]) => ({ mois, total })),
+    parMois: Object.entries(parMois).map(
+      ([mois, total]) => ({ mois, total })
+    ),
     dernieresAlertes: dernieresAlertes.map((a) => ({
       id: a.id,
       patient: `${a.patient.prenom} ${a.patient.nom}`,
       region: a.patient.region,
-      diagnostic: a.notes,
-      confiance: null,
+      diagnostic: a.diagnosticIa,
+      confiance: a.confiance,
       date: a.date,
     })),
   });
