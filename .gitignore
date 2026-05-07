@@ -48,3 +48,5 @@ next-env.d.ts
 node_modules/
 .env.local
 327325e0792ebdaddf915147c8b8012ad417d1f0
+.env.local
+.env.local
