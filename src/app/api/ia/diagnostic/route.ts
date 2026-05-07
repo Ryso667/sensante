@@ -55,7 +55,8 @@ export async function POST(request: Request) {
       data: {
         diagnosticIa: resultat.diagnostic,
         confiance: resultat.confiance,
-        statut: "termine", // On marque la consultation comme traitée
+        urgence: resultat.urgence,
+        statut: "termine",
       },
       include: { patient: true },
     });

@@ -43,6 +43,7 @@ model Consultation {
   updatedAt DateTime @updatedAt
   diagnosticIa String?
   confiance    Int?
+  urgence      String?
   patient   Patient @relation(fields: [patientId], references: [id])
   patientId String
   user      User    @relation(fields: [userId], references: [id])
