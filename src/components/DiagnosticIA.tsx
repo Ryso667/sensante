@@ -35,7 +35,7 @@ export default function DiagnosticIA({
       if (res.ok) {
         const data = await res.json();
         setResultat(data);
-        onDiagnostic(); // Rafraîchir la liste des consultations
+        // onDiagnostic();
       }
     } catch (error) {
       console.error("Erreur:", error);
