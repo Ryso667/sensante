@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     const updated = await prisma.consultation.update({
       where: { id: consultationId },
       data: {
-        diagnosticla: resultat.diagnostic,
+        diagnosticIa: resultat.diagnostic,
         confiance: resultat.confiance,
         statut: "termine", // On marque la consultation comme traitée
       },
