@@ -15,10 +15,13 @@ interface Stats {
     consultationsTerminees: number;
     alertesUrgentes: number;
   };
+  confianceMoyenne: number;
+  diagnosticsCeMois: number;
+  parUrgence: { urgence: string | null; total: number }[];
   parRegion: { region: string; total: number }[];
   parMois: { mois: string; total: number }[];
   dernieresAlertes: {
-    id: number;
+    id: string;
     patient: string;
     region: string;
     diagnostic: string | null;
@@ -56,8 +59,8 @@ export default function DashboardPage() {
         Tableau de bord
       </h1>
 
-      {/* Zone 1 : KPI */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      {/* Zone 1 : KPI principaux */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <StatCard titre="Patients"
           valeur={stats.kpi.totalPatients}
           unite="enregistrés"
@@ -76,8 +79,49 @@ export default function DashboardPage() {
           couleur="border-red-500" />
       </div>
 
+      {/* Zone 2 : Métriques IA */}
+      <h2 className="text-lg font-semibold text-gray-700 mb-3">
+        Métriques IA
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <StatCard
+          titre="Confiance moyenne"
+          valeur={stats.confianceMoyenne}
+          unite="% de confiance"
+          couleur="border-blue-500"
+        />
+        <StatCard
+          titre="Diagnostics ce mois"
+          valeur={stats.diagnosticsCeMois}
+          unite="ce mois-ci"
+          couleur="border-indigo-500"
+        />
+        <div className="bg-white rounded-lg shadow-md p-4 border-t-4 border-gray-300">
+          <p className="text-sm text-gray-500 mb-2">Taux d'urgence</p>
+          <div className="flex justify-around">
+            {["faible", "moyen", "urgent"].map((niveau) => {
+              const found = stats.parUrgence.find(
+                (u) => u.urgence === niveau
+              );
+              return (
+                <div key={niveau} className="text-center">
+                  <p className={`text-2xl font-bold ${
+                    niveau === "urgent" ? "text-red-600" :
+                    niveau === "moyen" ? "text-orange-500" :
+                    "text-green-600"
+                  }`}>
+                    {found ? found.total : 0}
+                  </p>
+                  <p className="text-xs text-gray-500 capitalize">{niveau}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Zone 2 : Graphique barres */}
+        {/* Zone 3 : Graphique barres */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-lg font-semibold text-gray-700 mb-4">
             Consultations par mois
@@ -118,34 +162,40 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Zone 3 : Dernières alertes */}
+      {/* Zone 5 : Derniers diagnostics IA */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-lg font-semibold text-gray-700 mb-4">
           Derniers diagnostics IA
         </h2>
         <div className="space-y-3">
-          {stats.dernieresAlertes.map((a) => (
-            <div key={a.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
-              <div>
-                <p className="font-semibold text-gray-800">{a.patient}</p>
-                <p className="text-sm text-gray-500">
-                  {a.region} —{" "}
-                  {new Date(a.date).toLocaleDateString("fr-FR")}
-                </p>
+          {stats.dernieresAlertes.length === 0 ? (
+            <p className="text-gray-400 italic">
+              Aucun diagnostic IA pour le moment.
+            </p>
+          ) : (
+            stats.dernieresAlertes.map((a) => (
+              <div key={a.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                <div>
+                  <p className="font-semibold text-gray-800">{a.patient}</p>
+                  <p className="text-sm text-gray-500">
+                    {a.region} —{" "}
+                    {new Date(a.date).toLocaleDateString("fr-FR")}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-700">
+                    {a.diagnostic
+                      ? a.diagnostic.substring(0, 50) + "..."
+                      : "—"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Confiance : {a.confiance ?? "—"}%
+                  </p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-700">
-                  {a.diagnostic
-                    ? a.diagnostic.substring(0, 50) + "..."
-                    : "—"}
-                </p>
-                <p className="text-xs text-gray-500">
-                  Confiance : {a.confiance}%
-                </p>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>
