@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import StatCard from "@/components/StatCard";
 import {
   BarChart, Bar, XAxis, YAxis,
@@ -36,20 +38,51 @@ const COULEURS_PIE = [
 ];
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (status === "loading") return;
+
+    if (!session || session.user.role !== "ADMIN") {
+      router.replace("/patients");
+      return;
+    }
+
     fetch("/api/stats")
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error("Impossible de charger les statistiques.");
+        }
+        return res.json();
+      })
       .then((data) => {
         setStats(data);
+        setError(null);
+      })
+      .catch(() => {
+        setError("Erreur lors du chargement du dashboard.");
+      })
+      .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [router, session, status]);
 
-  if (loading) {
+  if (status === "loading" || loading) {
     return <p className="text-gray-500">Chargement du dashboard...</p>;
+  }
+  if (!session || session.user.role !== "ADMIN") {
+    return (
+      <p className="text-red-600">
+        Accès refusé: ce tableau de bord est réservé aux administrateurs.
+      </p>
+    );
+  }
+  if (error) {
+    return <p className="text-red-600">{error}</p>;
   }
   if (!stats) return null;
 
@@ -97,7 +130,7 @@ export default function DashboardPage() {
           couleur="border-indigo-500"
         />
         <div className="bg-white rounded-lg shadow-md p-4 border-t-4 border-gray-300">
-          <p className="text-sm text-gray-500 mb-2">Taux d'urgence</p>
+          <p className="text-sm text-gray-500 mb-2">Taux d&apos;urgence</p>
           <div className="flex justify-around">
             {["faible", "moyen", "urgent"].map((niveau) => {
               const found = stats.parUrgence.find(

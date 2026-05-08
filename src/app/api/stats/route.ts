@@ -11,6 +11,12 @@ export async function GET() {
       { status: 401 }
     );
   }
+  if (session.user.role !== "ADMIN") {
+    return NextResponse.json(
+      { error: "Accès réservé aux administrateurs" },
+      { status: 403 }
+    );
+  }
 
   const totalPatients = await prisma.patient.count();
   const totalConsultations = await prisma.consultation.count();
@@ -20,8 +26,8 @@ export async function GET() {
   const alertesUrgentes = await prisma.consultation.count({
     where: {
       statut: "termine",
-      urgence: "urgent",
       diagnosticIa: { not: null },
+      confiance: { lt: 50 },
     },
   });
 
@@ -34,12 +40,29 @@ export async function GET() {
     confianceMoyenneResult._avg.confiance || 0
   );
 
-  // Répartition par urgence
-  const parUrgence = await prisma.consultation.groupBy({
-    by: ["urgence"],
-    _count: { id: true },
-    where: { urgence: { not: null } },
+  // Répartition par niveau d'urgence déduit de la confiance IA.
+  const consultationsAvecConfiance = await prisma.consultation.findMany({
+    where: {
+      statut: "termine",
+      diagnosticIa: { not: null },
+      confiance: { not: null },
+    },
+    select: { confiance: true },
   });
+  const parUrgenceCount = consultationsAvecConfiance.reduce(
+    (acc, c) => {
+      const confiance = c.confiance ?? 0;
+      if (confiance < 50) {
+        acc.urgent += 1;
+      } else if (confiance < 75) {
+        acc.moyen += 1;
+      } else {
+        acc.faible += 1;
+      }
+      return acc;
+    },
+    { faible: 0, moyen: 0, urgent: 0 }
+  );
 
   // Diagnostics ce mois
   const debutMois = new Date();
@@ -95,10 +118,11 @@ export async function GET() {
     },
     confianceMoyenne,
     diagnosticsCeMois,
-    parUrgence: parUrgence.map((u) => ({
-      urgence: u.urgence,
-      total: u._count.id,
-    })),
+    parUrgence: [
+      { urgence: "faible", total: parUrgenceCount.faible },
+      { urgence: "moyen", total: parUrgenceCount.moyen },
+      { urgence: "urgent", total: parUrgenceCount.urgent },
+    ],
     parRegion: parRegion.map((r) => ({
       region: r.region,
       total: r._count.id,
