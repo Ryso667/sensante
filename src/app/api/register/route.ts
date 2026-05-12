@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const roleParDefaut = "AGENT";
 
     // Vérifier que l'email n'existe pas déjà
     const existant = await prisma.user.findUnique({
@@ -25,7 +26,8 @@ export async function POST(request: Request) {
         prenom: body.prenom,
         email: body.email,
         password: hashedPassword,
-        role: "AGENT",
+        // Le rôle est imposé côté serveur (stratégie Bouclier).
+        role: roleParDefaut,
       },
     });
 
