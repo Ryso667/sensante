@@ -47,10 +47,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (status === "loading") return;
 
-    if (!session || session.user.role !== "ADMIN") {
-      router.replace("/patients");
-      return;
-    }
+
 
     fetch("/api/stats")
       .then(async (res) => {
