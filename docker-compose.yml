@@ -1,15 +1,21 @@
+# SQLite : une seule base partagée — le fichier prisma/dev.db sur l’hôte est monté
+# dans le conteneur. Même données en local (`npm run dev`) et avec Docker.
+# Évite d’ouvrir la base en écriture en même temps depuis deux processus
+# (ex. `npm run dev` + conteneur) : SQLite ne gère qu’un writer à la fois.
+
 version: "3.8"
+
 services:
-db:
- image: postgres:16
- restart: always
- environment:
- POSTGRES_USER: postgres
- POSTGRES_PASSWORD: postgres
- POSTGRES_DB: sensante
- ports:
-  - "5432:5432"
-  volumes:
-  - pgdata:/var/lib/postgresql/data
- volumes:
-  pgdata:
+  app:
+    build: .
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      # Même fichier que `file:./dev.db` côté Prisma (dossier prisma/)
+      DATABASE_URL: "file:/app/prisma/dev.db"
+    volumes:
+      - ./prisma:/app/prisma
+    command: sh -c "npx prisma migrate deploy && npm start"
