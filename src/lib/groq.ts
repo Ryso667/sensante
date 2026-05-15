@@ -1,8 +1,17 @@
 import Groq from "groq-sdk";
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+let groqClient: Groq | undefined;
+
+function getGroq(): Groq {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "GROQ_API_KEY manquant. Définissez cette variable d'environnement pour l'API diagnostic IA."
+    );
+  }
+  groqClient ??= new Groq({ apiKey });
+  return groqClient;
+}
 
 const SYSTEM_PROMPT = `Tu es un assistant médical pour le Sénégal.
 Tu analyses les symptômes signalés par un agent de santé communautaire et tu proposes un pré-diagnostic.
@@ -43,7 +52,7 @@ Symptômes : ${symptomes.join(", ")}
 ${notes ? `Notes : ${notes}` : ""}
 Propose un pré-diagnostic.`;
 
-  const completion = await groq.chat.completions.create({
+  const completion = await getGroq().chat.completions.create({
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: userMessage },

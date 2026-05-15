@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '../../../../generated/prisma'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 // GET /api/patients/[id] → détail d'un patient
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const patient = await prisma.patient.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
     if (!patient) {
       return NextResponse.json(
@@ -30,16 +29,19 @@ export async function GET(
 // PUT /api/patients/[id] → modifier un patient
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const patient = await prisma.patient.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         nom: body.nom,
         prenom: body.prenom,
-        date_naissance: new Date(body.date_naissance),
+        dateNaissance: new Date(
+          body.dateNaissance ?? body.date_naissance
+        ),
         sexe: body.sexe,
         telephone: body.telephone,
         adresse: body.adresse,

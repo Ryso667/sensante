@@ -1,3 +1,4 @@
+import type { User } from "next-auth";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { JWT } from "next-auth/jwt";
@@ -5,6 +6,7 @@ import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -29,7 +31,7 @@ export const authOptions: NextAuthOptions = {
           id: String(user.id),
           email: user.email,
           name: `${user.prenom} ${user.nom}`,
-          role: user.role,
+          role: user.role as User["role"],
         };
       },
     }),
@@ -43,7 +45,7 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.role = (token as JWT).role;
+        session.user.role = (token as JWT).role ?? "AGENT";
       }
       return session;
     },

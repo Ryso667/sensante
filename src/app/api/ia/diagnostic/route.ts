@@ -14,6 +14,13 @@ export async function POST(request: Request) {
     );
   }
 
+  if (!process.env.GROQ_API_KEY) {
+    return NextResponse.json(
+      { error: "Service IA non configuré (variable GROQ_API_KEY)." },
+      { status: 503 }
+    );
+  }
+
   try {
     const { consultationId } = await request.json();
 
